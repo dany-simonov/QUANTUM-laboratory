@@ -21,6 +21,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    open: '/QUANTUM-laboratory/',
+    proxy: {
+      '/QUANTUM-laboratory': {
+        target: 'http://localhost:8080',
+        rewrite: (path) => path.replace(/^\/QUANTUM-laboratory/, '')
+      }
+    }
   },
   plugins: [
     react(),

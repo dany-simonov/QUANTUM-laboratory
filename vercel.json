@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/QUANTUM-laboratory/:path*",
+      "destination": "/QUANTUM-laboratory/index.html"
+    }
+  ]
+} 
