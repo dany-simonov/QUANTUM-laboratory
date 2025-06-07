@@ -117,7 +117,7 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
               <Timer className="w-5 h-5 text-quantum-orange animate-pulse" />
               <span className="font-semibold">Эксперимент в процессе...</span>
             </div>
-            <Progress value={experimentProgress} className="h-3" />
+            <Progress value={experimentProgress} />
             <p className="text-sm text-muted-foreground mt-2">
               Прогресс: {Math.round(experimentProgress)}%
             </p>
