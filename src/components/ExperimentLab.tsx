@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Zap, Atom, Waves, Lightbulb, Timer, AlertCircle, Trophy, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -339,7 +340,7 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
                   <Button
                     onClick={() => startExperiment(experiment)}
                     disabled={!isAvailable || !canAfford || isActive || activeExperiment !== null}
-                    className={`w-full bg-${experiment.color} hover:bg-${experiment.color}/80 text-black`}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
                   >
                     {isActive ? 'Эксперимент идет...' : 'Начать эксперимент'}
                   </Button>

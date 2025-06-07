@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Atom, Zap, Book, Award, Target, Clock, Star, Eye, Waves, Trophy } from 'lucide-react';
+import { ArrowLeft, Atom, Zap, Book, Award, Target, Clock, Star, Eye, Waves, Trophy, CircuitBoard, Timer, Thermometer, Volume2, Magnet, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -10,6 +10,12 @@ import ExperimentLab from './ExperimentLab';
 import ParticleSimulator from './ParticleSimulator';
 import OpticsSimulator from './OpticsSimulator';
 import WaveSimulator from './WaveSimulator';
+import ElectricalCircuitSimulator from './ElectricalCircuitSimulator';
+import MechanicalOscillationSimulator from './MechanicalOscillationSimulator';
+import ThermalProcessSimulator from './ThermalProcessSimulator';
+import SoundWaveSimulator from './SoundWaveSimulator';
+import MagneticFieldSimulator from './MagneticFieldSimulator';
+import MotionSimulator from './MotionSimulator';
 import ScientistProfile from './ScientistProfile';
 import AchievementsPanel from './AchievementsPanel';
 
@@ -20,6 +26,7 @@ interface GameScreenProps {
 
 interface GameState {
   energy: number;
+  maxEnergy: number;
   knowledge: number;
   discoveries: number;
   level: number;
@@ -37,6 +44,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
     const saved = localStorage.getItem(`quantumLabGame_${playerName}`);
     return saved ? JSON.parse(saved) : {
       energy: 100,
+      maxEnergy: 100,
       knowledge: 0,
       discoveries: 0,
       level: 1,
@@ -48,7 +56,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
     };
   });
 
-  const [activeTab, setActiveTab] = useState<'lab' | 'particles' | 'optics' | 'waves' | 'scientists' | 'achievements'>('lab');
+  const [activeTab, setActiveTab] = useState<'lab' | 'particles' | 'optics' | 'waves' | 'circuits' | 'oscillations' | 'thermal' | 'sound' | 'magnetic' | 'motion' | 'scientists' | 'achievements'>('lab');
   const [gameTime, setGameTime] = useState(0);
 
   // Сохраняем состояние игры
@@ -74,9 +82,9 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
     const energyTimer = setInterval(() => {
       setGameState(prev => ({
         ...prev,
-        energy: Math.min(100, prev.energy + 2)
+        energy: Math.min(prev.maxEnergy, prev.energy + 2)
       }));
-    }, 3000); // Быстрее восстановление энергии
+    }, 3000);
 
     return () => clearInterval(energyTimer);
   }, []);
@@ -94,10 +102,12 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
     setGameState(prev => {
       const newKnowledge = prev.knowledge + knowledge;
       const newLevel = Math.floor(newKnowledge / 100) + 1;
+      const newMaxEnergy = 100 + ((newLevel - 1) * 25); // Увеличиваем максимум энергии на 25 за уровень
       
       const newState = {
         ...prev,
         energy: prev.energy - energyCost,
+        maxEnergy: newMaxEnergy,
         knowledge: newKnowledge,
         discoveries: prev.discoveries + 1,
         currentExperiment: experimentType,
@@ -108,26 +118,35 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
       if (newLevel > prev.level) {
         toast({
           title: "Повышение уровня! 🎉",
-          description: `Поздравляем! Вы достигли ${newLevel} уровня исследователя!`,
+          description: `Поздравляем! Вы достигли ${newLevel} уровня исследователя! Максимум энергии увеличен до ${newMaxEnergy}.`,
         });
 
-        // Разблокируем ученых по уровням
+        // Разблокируем ученых быстрее (каждый уровень)
         const scientistUnlocks = {
-          2: 'curie',
-          3: 'landau',
-          4: 'bohr',
-          5: 'sakharov',
-          6: 'kapitsa',
-          7: 'feynman'
+          2: ['curie', 'planck'],
+          3: ['landau', 'bohr'],
+          4: ['heisenberg', 'schrodinger'],
+          5: ['feynman', 'dirac'],
+          6: ['maxwell', 'galilei'],
+          7: ['newton', 'goeppert_mayer'],
+          8: ['fermi', 'chadwick'],
+          9: ['meitner', 'faraday'],
+          10: ['gauss', 'mendeleev'],
+          11: ['kurchatov', 'sakharov'],
+          12: ['korolev', 'lobachevsky'],
+          13: ['tsiolkovsky', 'cherenkov'],
+          14: ['friedman', 'basov'],
+          15: ['mechnikov', 'popov']
         };
 
-        if (scientistUnlocks[newLevel as keyof typeof scientistUnlocks]) {
-          const scientistId = scientistUnlocks[newLevel as keyof typeof scientistUnlocks];
-          if (!newState.unlockedScientists.includes(scientistId)) {
-            newState.unlockedScientists = [...newState.unlockedScientists, scientistId];
+        const newUnlocks = scientistUnlocks[newLevel as keyof typeof scientistUnlocks] || [];
+        if (newUnlocks.length > 0) {
+          const toUnlock = newUnlocks.filter(id => !newState.unlockedScientists.includes(id));
+          if (toUnlock.length > 0) {
+            newState.unlockedScientists = [...newState.unlockedScientists, ...toUnlock];
             toast({
-              title: "Новый ученый разблокирован! 👨‍🔬",
-              description: "Изучите биографию в разделе 'Ученые'",
+              title: "Новые ученые разблокированы! 👨‍🔬",
+              description: `Изучите ${toUnlock.length} новых биографий в разделе 'Ученые'`,
             });
           }
         }
@@ -232,12 +251,9 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <span>Энергия</span>
-                    <span className="text-quantum-blue">{gameState.energy}/100</span>
+                    <span className="text-quantum-blue">{gameState.energy}/{gameState.maxEnergy}</span>
                   </div>
-                  <Progress value={gameState.energy} />
-                  <span className="text-xs text-muted-foreground">
-                    +2 каждые 3 секунды
-                  </span>
+                  <Progress value={(gameState.energy / gameState.maxEnergy) * 100} />
                 </div>
 
                 <div>
@@ -287,27 +303,87 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                     className="w-full justify-start"
                   >
                     <Atom className="w-4 h-4 mr-2" />
-                    Симулятор частиц
+                    Частицы
+                  </Button>
+                  <Button
+                    onClick={() => setActiveTab('circuits')}
+                    variant={activeTab === 'circuits' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                    disabled={gameState.level < 2}
+                  >
+                    <CircuitBoard className="w-4 h-4 mr-2" />
+                    Электрические цепи
+                    {gameState.level < 2 && <span className="ml-auto text-xs">(ур. 2)</span>}
+                  </Button>
+                  <Button
+                    onClick={() => setActiveTab('oscillations')}
+                    variant={activeTab === 'oscillations' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                    disabled={gameState.level < 3}
+                  >
+                    <Timer className="w-4 h-4 mr-2" />
+                    Колебания
+                    {gameState.level < 3 && <span className="ml-auto text-xs">(ур. 3)</span>}
+                  </Button>
+                  <Button
+                    onClick={() => setActiveTab('thermal')}
+                    variant={activeTab === 'thermal' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                    disabled={gameState.level < 4}
+                  >
+                    <Thermometer className="w-4 h-4 mr-2" />
+                    Тепловые процессы
+                    {gameState.level < 4 && <span className="ml-auto text-xs">(ур. 4)</span>}
+                  </Button>
+                  <Button
+                    onClick={() => setActiveTab('sound')}
+                    variant={activeTab === 'sound' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                    disabled={gameState.level < 5}
+                  >
+                    <Volume2 className="w-4 h-4 mr-2" />
+                    Звуковые волны
+                    {gameState.level < 5 && <span className="ml-auto text-xs">(ур. 5)</span>}
                   </Button>
                   <Button
                     onClick={() => setActiveTab('optics')}
                     variant={activeTab === 'optics' ? 'default' : 'ghost'}
                     className="w-full justify-start"
-                    disabled={gameState.level < 2}
+                    disabled={gameState.level < 6}
                   >
                     <Eye className="w-4 h-4 mr-2" />
-                    Симулятор оптики
-                    {gameState.level < 2 && <span className="ml-auto text-xs">(ур. 2)</span>}
+                    Оптика
+                    {gameState.level < 6 && <span className="ml-auto text-xs">(ур. 6)</span>}
+                  </Button>
+                  <Button
+                    onClick={() => setActiveTab('magnetic')}
+                    variant={activeTab === 'magnetic' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                    disabled={gameState.level < 7}
+                  >
+                    <Magnet className="w-4 h-4 mr-2" />
+                    Магнетизм
+                    {gameState.level < 7 && <span className="ml-auto text-xs">(ур. 7)</span>}
+                  </Button>
+                  <Button
+                    onClick={() => setActiveTab('motion')}
+                    variant={activeTab === 'motion' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                    disabled={gameState.level < 8}
+                  >
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Механика
+                    {gameState.level < 8 && <span className="ml-auto text-xs">(ур. 8)</span>}
                   </Button>
                   <Button
                     onClick={() => setActiveTab('waves')}
                     variant={activeTab === 'waves' ? 'default' : 'ghost'}
                     className="w-full justify-start"
-                    disabled={gameState.level < 3}
+                    disabled={gameState.level < 9}
                   >
                     <Waves className="w-4 h-4 mr-2" />
-                    Симулятор волн
-                    {gameState.level < 3 && <span className="ml-auto text-xs">(ур. 3)</span>}
+                    Волны
+                    {gameState.level < 9 && <span className="ml-auto text-xs">(ур. 9)</span>}
                   </Button>
                   <Button
                     onClick={() => setActiveTab('scientists')}
@@ -345,13 +421,49 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                 onExperimentComplete={handleSimulatorComplete}
               />
             )}
-            {activeTab === 'optics' && gameState.level >= 2 && (
+            {activeTab === 'circuits' && gameState.level >= 2 && (
+              <ElectricalCircuitSimulator 
+                gameState={gameState}
+                onExperimentComplete={handleSimulatorComplete}
+              />
+            )}
+            {activeTab === 'oscillations' && gameState.level >= 3 && (
+              <MechanicalOscillationSimulator 
+                gameState={gameState}
+                onExperimentComplete={handleSimulatorComplete}
+              />
+            )}
+            {activeTab === 'thermal' && gameState.level >= 4 && (
+              <ThermalProcessSimulator 
+                gameState={gameState}
+                onExperimentComplete={handleSimulatorComplete}
+              />
+            )}
+            {activeTab === 'sound' && gameState.level >= 5 && (
+              <SoundWaveSimulator 
+                gameState={gameState}
+                onExperimentComplete={handleSimulatorComplete}
+              />
+            )}
+            {activeTab === 'optics' && gameState.level >= 6 && (
               <OpticsSimulator 
                 gameState={gameState}
                 onExperimentComplete={handleSimulatorComplete}
               />
             )}
-            {activeTab === 'waves' && gameState.level >= 3 && (
+            {activeTab === 'magnetic' && gameState.level >= 7 && (
+              <MagneticFieldSimulator 
+                gameState={gameState}
+                onExperimentComplete={handleSimulatorComplete}
+              />
+            )}
+            {activeTab === 'motion' && gameState.level >= 8 && (
+              <MotionSimulator 
+                gameState={gameState}
+                onExperimentComplete={handleSimulatorComplete}
+              />
+            )}
+            {activeTab === 'waves' && gameState.level >= 9 && (
               <WaveSimulator 
                 gameState={gameState}
                 onExperimentComplete={handleSimulatorComplete}
