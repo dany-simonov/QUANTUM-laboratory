@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: '/QUANTUM-laboratory/',
+  base: mode === 'development' ? '/' : '/QUANTUM-laboratory/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     host: "::",
-    port: 8080,
+    port: 8082,
     open: '/QUANTUM-laboratory/',
     proxy: {
       '/QUANTUM-laboratory': {
