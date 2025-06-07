@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Atom, Zap, Book, Award, Target, Clock, Star } from 'lucide-react';
+import { ArrowLeft, Atom, Zap, Book, Award, Target, Clock, Star, Eye, Waves, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -8,7 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import ExperimentLab from './ExperimentLab';
 import ParticleSimulator from './ParticleSimulator';
+import OpticsSimulator from './OpticsSimulator';
+import WaveSimulator from './WaveSimulator';
 import ScientistProfile from './ScientistProfile';
+import AchievementsPanel from './AchievementsPanel';
 
 interface GameScreenProps {
   onBack: () => void;
@@ -24,23 +27,34 @@ interface GameState {
   currentExperiment: string | null;
   unlockedScientists: string[];
   achievements: string[];
+  completedLevels: number[];
 }
 
 const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
   const { toast } = useToast();
-  const [gameState, setGameState] = useState<GameState>({
-    energy: 100,
-    knowledge: 0,
-    discoveries: 0,
-    level: 1,
-    timeInLab: 0,
-    currentExperiment: null,
-    unlockedScientists: ['Einstein'],
-    achievements: []
+  const [gameState, setGameState] = useState<GameState>(() => {
+    // Загружаем сохраненное состояние
+    const saved = localStorage.getItem(`quantumLabGame_${playerName}`);
+    return saved ? JSON.parse(saved) : {
+      energy: 100,
+      knowledge: 0,
+      discoveries: 0,
+      level: 1,
+      timeInLab: 0,
+      currentExperiment: null,
+      unlockedScientists: ['einstein'],
+      achievements: [],
+      completedLevels: []
+    };
   });
 
-  const [activeTab, setActiveTab] = useState<'lab' | 'particles' | 'scientists'>('lab');
+  const [activeTab, setActiveTab] = useState<'lab' | 'particles' | 'optics' | 'waves' | 'scientists' | 'achievements'>('lab');
   const [gameTime, setGameTime] = useState(0);
+
+  // Сохраняем состояние игры
+  useEffect(() => {
+    localStorage.setItem(`quantumLabGame_${playerName}`, JSON.stringify(gameState));
+  }, [gameState, playerName]);
 
   // Game timer
   useEffect(() => {
@@ -55,19 +69,19 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-generate energy
+  // Auto-generate energy (faster)
   useEffect(() => {
     const energyTimer = setInterval(() => {
       setGameState(prev => ({
         ...prev,
-        energy: Math.min(100, prev.energy + 1)
+        energy: Math.min(100, prev.energy + 2)
       }));
-    }, 5000);
+    }, 3000); // Быстрее восстановление энергии
 
     return () => clearInterval(energyTimer);
   }, []);
 
-  const conductExperiment = (experimentType: string, energyCost: number) => {
+  const conductExperiment = (experimentType: string, energyCost: number, knowledge: number) => {
     if (gameState.energy < energyCost) {
       toast({
         title: "Недостаточно энергии!",
@@ -77,33 +91,80 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
       return;
     }
 
-    setGameState(prev => ({
-      ...prev,
-      energy: prev.energy - energyCost,
-      knowledge: prev.knowledge + Math.floor(Math.random() * 20) + 10,
-      discoveries: prev.discoveries + 1,
-      currentExperiment: experimentType
-    }));
-
-    // Check for level up
-    const newKnowledge = gameState.knowledge + Math.floor(Math.random() * 20) + 10;
-    const newLevel = Math.floor(newKnowledge / 100) + 1;
-    
-    if (newLevel > gameState.level) {
-      toast({
-        title: "Повышение уровня!",
-        description: `Поздравляем! Вы достигли ${newLevel} уровня исследователя!`,
-      });
+    setGameState(prev => {
+      const newKnowledge = prev.knowledge + knowledge;
+      const newLevel = Math.floor(newKnowledge / 100) + 1;
       
-      setGameState(prev => ({
+      const newState = {
         ...prev,
+        energy: prev.energy - energyCost,
+        knowledge: newKnowledge,
+        discoveries: prev.discoveries + 1,
+        currentExperiment: experimentType,
         level: newLevel
-      }));
-    }
+      };
+
+      // Проверяем повышение уровня
+      if (newLevel > prev.level) {
+        toast({
+          title: "Повышение уровня! 🎉",
+          description: `Поздравляем! Вы достигли ${newLevel} уровня исследователя!`,
+        });
+
+        // Разблокируем ученых по уровням
+        const scientistUnlocks = {
+          2: 'curie',
+          3: 'landau',
+          4: 'bohr',
+          5: 'sakharov',
+          6: 'kapitsa',
+          7: 'feynman'
+        };
+
+        if (scientistUnlocks[newLevel as keyof typeof scientistUnlocks]) {
+          const scientistId = scientistUnlocks[newLevel as keyof typeof scientistUnlocks];
+          if (!newState.unlockedScientists.includes(scientistId)) {
+            newState.unlockedScientists = [...newState.unlockedScientists, scientistId];
+            toast({
+              title: "Новый ученый разблокирован! 👨‍🔬",
+              description: "Изучите биографию в разделе 'Ученые'",
+            });
+          }
+        }
+      }
+
+      return newState;
+    });
 
     toast({
-      title: "Эксперимент завершен!",
-      description: `Получено знаний: ${Math.floor(Math.random() * 20) + 10}`,
+      title: "Эксперимент завершен! ⚗️",
+      description: `Получено знаний: ${knowledge}`,
+    });
+  };
+
+  const completeLevel = (levelData: any) => {
+    setGameState(prev => ({
+      ...prev,
+      knowledge: prev.knowledge + levelData.reward,
+      completedLevels: [...prev.completedLevels, levelData.level]
+    }));
+
+    toast({
+      title: `Уровень ${levelData.level} завершен! 🏆`,
+      description: `${levelData.name} - награда: ${levelData.reward} знаний`,
+    });
+  };
+
+  const handleSimulatorComplete = (knowledge: number) => {
+    setGameState(prev => ({
+      ...prev,
+      knowledge: prev.knowledge + knowledge,
+      discoveries: prev.discoveries + 1
+    }));
+
+    toast({
+      title: "Симуляция завершена! 🔬",
+      description: `Получено знаний: ${knowledge}`,
     });
   };
 
@@ -111,6 +172,14 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const clearProgress = () => {
+    const confirmed = window.confirm('Вы уверены, что хотите сменить исследователя? Весь прогресс будет сброшен!');
+    if (confirmed) {
+      localStorage.removeItem(`quantumLabGame_${playerName}`);
+      window.location.reload();
+    }
   };
 
   return (
@@ -137,6 +206,15 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
               <Badge variant="outline" className="text-quantum-blue border-quantum-blue">
                 {playerName} - Уровень {gameState.level}
               </Badge>
+
+              <Button
+                onClick={clearProgress}
+                variant="outline"
+                size="sm"
+                className="text-quantum-orange border-quantum-orange hover:bg-quantum-orange/10"
+              >
+                Сменить исследователя
+              </Button>
             </div>
           </div>
         </div>
@@ -156,7 +234,10 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                     <span>Энергия</span>
                     <span className="text-quantum-blue">{gameState.energy}/100</span>
                   </div>
-                  <Progress value={gameState.energy} className="h-2" />
+                  <Progress value={gameState.energy} />
+                  <span className="text-xs text-muted-foreground">
+                    +2 каждые 3 секунды
+                  </span>
                 </div>
 
                 <div>
@@ -164,7 +245,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                     <span>Знания</span>
                     <span className="text-quantum-purple">{gameState.knowledge}</span>
                   </div>
-                  <Progress value={(gameState.knowledge % 100)} className="h-2" />
+                  <Progress value={(gameState.knowledge % 100)} />
                   <span className="text-xs text-muted-foreground">
                     До {gameState.level + 1} уровня: {100 - (gameState.knowledge % 100)}
                   </span>
@@ -180,10 +261,15 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                     <span>{gameState.achievements.length}</span>
                   </div>
                 </div>
+
+                <div className="text-xs text-muted-foreground">
+                  <p>Время в лаборатории: {Math.floor(gameState.timeInLab / 60)}м {gameState.timeInLab % 60}с</p>
+                  <p>Завершено уровней: {gameState.completedLevels.length}</p>
+                </div>
               </CardContent>
             </Card>
 
-            {/* Navigation */}
+            {/* Enhanced Navigation */}
             <Card className="bg-card/90">
               <CardContent className="p-4">
                 <div className="space-y-2">
@@ -204,12 +290,40 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                     Симулятор частиц
                   </Button>
                   <Button
+                    onClick={() => setActiveTab('optics')}
+                    variant={activeTab === 'optics' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                    disabled={gameState.level < 2}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Симулятор оптики
+                    {gameState.level < 2 && <span className="ml-auto text-xs">(ур. 2)</span>}
+                  </Button>
+                  <Button
+                    onClick={() => setActiveTab('waves')}
+                    variant={activeTab === 'waves' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                    disabled={gameState.level < 3}
+                  >
+                    <Waves className="w-4 h-4 mr-2" />
+                    Симулятор волн
+                    {gameState.level < 3 && <span className="ml-auto text-xs">(ур. 3)</span>}
+                  </Button>
+                  <Button
                     onClick={() => setActiveTab('scientists')}
                     variant={activeTab === 'scientists' ? 'default' : 'ghost'}
                     className="w-full justify-start"
                   >
                     <Book className="w-4 h-4 mr-2" />
                     Ученые
+                  </Button>
+                  <Button
+                    onClick={() => setActiveTab('achievements')}
+                    variant={activeTab === 'achievements' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                  >
+                    <Trophy className="w-4 h-4 mr-2" />
+                    Достижения
                   </Button>
                 </div>
               </CardContent>
@@ -222,24 +336,36 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
               <ExperimentLab 
                 gameState={gameState}
                 onConductExperiment={conductExperiment}
+                onCompleteLevel={completeLevel}
               />
             )}
             {activeTab === 'particles' && (
               <ParticleSimulator 
                 gameState={gameState}
-                onExperimentComplete={(knowledge) => {
-                  setGameState(prev => ({
-                    ...prev,
-                    knowledge: prev.knowledge + knowledge,
-                    discoveries: prev.discoveries + 1
-                  }));
-                }}
+                onExperimentComplete={handleSimulatorComplete}
+              />
+            )}
+            {activeTab === 'optics' && gameState.level >= 2 && (
+              <OpticsSimulator 
+                gameState={gameState}
+                onExperimentComplete={handleSimulatorComplete}
+              />
+            )}
+            {activeTab === 'waves' && gameState.level >= 3 && (
+              <WaveSimulator 
+                gameState={gameState}
+                onExperimentComplete={handleSimulatorComplete}
               />
             )}
             {activeTab === 'scientists' && (
               <ScientistProfile 
                 unlockedScientists={gameState.unlockedScientists}
                 playerLevel={gameState.level}
+              />
+            )}
+            {activeTab === 'achievements' && (
+              <AchievementsPanel 
+                gameState={gameState}
               />
             )}
           </div>
