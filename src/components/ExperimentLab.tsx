@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Zap, Atom, Waves, Lightbulb, Timer, AlertCircle, Trophy, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
