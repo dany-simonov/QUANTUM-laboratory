@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
-import { Zap, Atom, Waves, Lightbulb, Timer, AlertCircle, Trophy, Target } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Zap, Atom, Waves, Lightbulb, Timer, AlertCircle, Trophy, Target, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
 
 interface ExperimentLabProps {
   gameState: any;
@@ -38,10 +39,10 @@ interface Experiment {
 }
 
 const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExperiment, onCompleteLevel }) => {
+  const { toast } = useToast();
   const [activeExperiment, setActiveExperiment] = useState<string | null>(null);
   const [experimentProgress, setExperimentProgress] = useState(0);
   const [currentLevel, setCurrentLevel] = useState(1);
-  const [completedExperiments, setCompletedExperiments] = useState<string[]>([]);
 
   const levels: Level[] = [
     {
@@ -157,13 +158,52 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
     }
   ];
 
+  // Check if current level is complete and update
+  useEffect(() => {
+    const currentLevelData = levels.find(level => level.id === currentLevel);
+    if (currentLevelData && !gameState.completedLevels.includes(currentLevel)) {
+      const requiredCount = currentLevelData.requiredExperiments.length;
+      const completedCount = (gameState.completedExperiments || []).filter(exp => 
+        currentLevelData.requiredExperiments.includes(exp)
+      ).length;
+      
+      if (completedCount >= requiredCount) {
+        onCompleteLevel({
+          level: currentLevel,
+          reward: currentLevelData.reward,
+          name: currentLevelData.name
+        });
+        setCurrentLevel(prev => prev + 1);
+        
+        toast({
+          title: `🎉 Уровень ${currentLevel} завершен!`,
+          description: `"${currentLevelData.name}" - Получено ${currentLevelData.reward} знаний!`,
+        });
+      }
+    }
+  }, [gameState.completedExperiments, currentLevel, onCompleteLevel, toast]);
+
   const getCurrentLevel = () => {
     return levels.find(level => level.id === currentLevel);
   };
 
   const startExperiment = (experiment: Experiment) => {
-    if (gameState.energy < experiment.energyCost) return;
-    if (gameState.level < experiment.requiredLevel) return;
+    if (gameState.energy < experiment.energyCost) {
+      toast({
+        title: "Недостаточно энергии!",
+        description: "Подождите, пока энергия восстановится.",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (gameState.level < experiment.requiredLevel) {
+      toast({
+        title: "Уровень слишком низкий!",
+        description: `Требуется ${experiment.requiredLevel} уровень.`,
+        variant: "destructive"
+      });
+      return;
+    }
 
     setActiveExperiment(experiment.id);
     setExperimentProgress(0);
@@ -177,27 +217,6 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
           const knowledge = Math.floor(Math.random() * 20) + 15;
           onConductExperiment(experiment.id, experiment.energyCost, knowledge);
           
-          // Check level completion
-          const newCompleted = [...completedExperiments, experiment.id];
-          setCompletedExperiments(newCompleted);
-          
-          const currentLevelData = getCurrentLevel();
-          if (currentLevelData && !currentLevelData.completed) {
-            const requiredCount = currentLevelData.requiredExperiments.length;
-            const completedCount = newCompleted.filter(exp => 
-              currentLevelData.requiredExperiments.includes(exp)
-            ).length;
-            
-            if (completedCount >= requiredCount) {
-              onCompleteLevel({
-                level: currentLevel,
-                reward: currentLevelData.reward,
-                name: currentLevelData.name
-              });
-              setCurrentLevel(prev => prev + 1);
-            }
-          }
-          
           return 0;
         }
         return prev + (100 / experiment.duration);
@@ -206,6 +225,7 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
   };
 
   const currentLevelData = getCurrentLevel();
+  const isLevelCompleted = gameState.completedLevels?.includes(currentLevel);
 
   return (
     <div className="space-y-6">
@@ -223,40 +243,57 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
 
       {/* Current Level */}
       {currentLevelData && (
-        <Card className="border-quantum-green bg-gradient-to-r from-lab-surface to-quantum-green/10">
+        <Card className={`${isLevelCompleted ? 'border-quantum-green bg-gradient-to-r from-lab-surface to-quantum-green/10' : 'border-quantum-yellow bg-gradient-to-r from-lab-surface to-quantum-yellow/10'}`}>
           <CardHeader>
-            <CardTitle className="text-lg text-quantum-green flex items-center gap-2">
-              <Trophy className="w-5 h-5" />
+            <CardTitle className={`text-lg ${isLevelCompleted ? 'text-quantum-green' : 'text-quantum-yellow'} flex items-center gap-2`}>
+              {isLevelCompleted ? <CheckCircle className="w-5 h-5" /> : <Trophy className="w-5 h-5" />}
               Уровень {currentLevel}: {currentLevelData.name}
+              {isLevelCompleted && <Badge className="bg-quantum-green/20 text-quantum-green ml-2">Завершен!</Badge>}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">{currentLevelData.description}</p>
             
-            <div className="bg-lab-surface/50 p-4 rounded-lg border border-quantum-green/20">
-              <h4 className="font-semibold text-quantum-green mb-2">🎯 Задание:</h4>
+            <div className={`bg-lab-surface/50 p-4 rounded-lg border ${isLevelCompleted ? 'border-quantum-green/20' : 'border-quantum-yellow/20'}`}>
+              <h4 className={`font-semibold ${isLevelCompleted ? 'text-quantum-green' : 'text-quantum-yellow'} mb-2`}>
+                🎯 Задание:
+              </h4>
               <p>{currentLevelData.objective}</p>
-            </div>
-
-            <div className="bg-lab-surface/50 p-4 rounded-lg border border-quantum-yellow/20">
-              <h4 className="font-semibold text-quantum-yellow mb-2">💡 Подсказка:</h4>
-              <p>{currentLevelData.hint}</p>
+              {!isLevelCompleted && (
+                <div className="mt-2">
+                  <div className="text-sm text-muted-foreground">
+                    Прогресс: {(gameState.completedExperiments || []).filter(exp => 
+                      currentLevelData.requiredExperiments.includes(exp)
+                    ).length} / {currentLevelData.requiredExperiments.length}
+                  </div>
+                  <Progress 
+                    value={((gameState.completedExperiments || []).filter(exp => 
+                      currentLevelData.requiredExperiments.includes(exp)
+                    ).length / currentLevelData.requiredExperiments.length) * 100} 
+                  />
+                </div>
+              )}
             </div>
 
             <div className="bg-lab-surface/50 p-4 rounded-lg border border-quantum-blue/20">
-              <h4 className="font-semibold text-quantum-blue mb-2">🧠 Интересные факты:</h4>
+              <h4 className="font-semibold text-quantum-blue mb-2">💡 Подсказка:</h4>
+              <p>{currentLevelData.hint}</p>
+            </div>
+
+            <div className="bg-lab-surface/50 p-4 rounded-lg border border-quantum-purple/20">
+              <h4 className="font-semibold text-quantum-purple mb-2">🧠 Интересные факты:</h4>
               <ul className="text-sm space-y-1">
                 {currentLevelData.facts.map((fact, index) => (
                   <li key={index} className="flex items-start gap-2">
-                    <span className="text-quantum-blue">•</span>
+                    <span className="text-quantum-purple">•</span>
                     {fact}
                   </li>
                 ))}
               </ul>
             </div>
 
-            <Badge className="bg-quantum-green/20 text-quantum-green">
-              Награда: {currentLevelData.reward} знаний
+            <Badge className={`${isLevelCompleted ? 'bg-quantum-green/20 text-quantum-green' : 'bg-quantum-orange/20 text-quantum-orange'}`}>
+              {isLevelCompleted ? `✓ Получено: ${currentLevelData.reward} знаний` : `Награда: ${currentLevelData.reward} знаний`}
             </Badge>
           </CardContent>
         </Card>
@@ -285,6 +322,7 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
           const isAvailable = gameState.level >= experiment.requiredLevel;
           const canAfford = gameState.energy >= experiment.energyCost;
           const isActive = activeExperiment === experiment.id;
+          const completedCount = (gameState.completedExperiments || []).filter(exp => exp === experiment.id).length;
 
           return (
             <Card 
@@ -304,6 +342,11 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
                       </p>
                     </div>
                   </div>
+                  {completedCount > 0 && (
+                    <Badge variant="outline" className="text-quantum-green">
+                      ✓ {completedCount}x
+                    </Badge>
+                  )}
                 </div>
               </CardHeader>
 

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Atom, Zap, Book, Award, Target, Clock, Star, Eye, Waves, Trophy, CircuitBoard, Timer, Thermometer, Volume2, Magnet, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Atom, Zap, Book, Award, Target, Clock, Star, Eye, Waves, Trophy, CircuitBoard, Timer, Thermometer, Volume2, Magnet, TrendingUp, Beaker } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -18,6 +18,7 @@ import MagneticFieldSimulator from './MagneticFieldSimulator';
 import MotionSimulator from './MotionSimulator';
 import ScientistProfile from './ScientistProfile';
 import AchievementsPanel from './AchievementsPanel';
+import PhysicsLab from './PhysicsLab';
 
 interface GameScreenProps {
   onBack: () => void;
@@ -35,6 +36,7 @@ interface GameState {
   unlockedScientists: string[];
   achievements: string[];
   completedLevels: number[];
+  completedExperiments: string[];
 }
 
 const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
@@ -52,11 +54,12 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
       currentExperiment: null,
       unlockedScientists: ['einstein'],
       achievements: [],
-      completedLevels: []
+      completedLevels: [],
+      completedExperiments: []
     };
   });
 
-  const [activeTab, setActiveTab] = useState<'lab' | 'particles' | 'optics' | 'waves' | 'circuits' | 'oscillations' | 'thermal' | 'sound' | 'magnetic' | 'motion' | 'scientists' | 'achievements'>('lab');
+  const [activeTab, setActiveTab] = useState<'lab' | 'particles' | 'optics' | 'waves' | 'circuits' | 'oscillations' | 'thermal' | 'sound' | 'magnetic' | 'motion' | 'scientists' | 'achievements' | 'physics-lab'>('lab');
   const [gameTime, setGameTime] = useState(0);
 
   // Сохраняем состояние игры
@@ -102,7 +105,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
     setGameState(prev => {
       const newKnowledge = prev.knowledge + knowledge;
       const newLevel = Math.floor(newKnowledge / 100) + 1;
-      const newMaxEnergy = 100 + ((newLevel - 1) * 25); // Увеличиваем максимум энергии на 25 за уровень
+      const newMaxEnergy = 100 + ((newLevel - 1) * 25);
+      const newCompletedExperiments = [...prev.completedExperiments, experimentType];
       
       const newState = {
         ...prev,
@@ -111,7 +115,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
         knowledge: newKnowledge,
         discoveries: prev.discoveries + 1,
         currentExperiment: experimentType,
-        level: newLevel
+        level: newLevel,
+        completedExperiments: newCompletedExperiments
       };
 
       // Проверяем повышение уровня
@@ -201,6 +206,26 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
     }
   };
 
+  // Calculate achievements
+  const calculateAchievements = () => {
+    const achievements = [];
+    if (gameState.discoveries >= 1) achievements.push('first_experiment');
+    if (gameState.energy >= gameState.maxEnergy) achievements.push('energy_saver');
+    if (gameState.knowledge >= 100) achievements.push('knowledge_seeker');
+    if (gameState.discoveries >= 10) achievements.push('experiment_master');
+    if (gameState.timeInLab >= 600) achievements.push('time_traveler');
+    if (gameState.level >= 5) achievements.push('level_up');
+    if (gameState.knowledge >= 500) achievements.push('scientist');
+    if (gameState.discoveries >= 25) achievements.push('persistent');
+    if (gameState.timeInLab >= 1800) achievements.push('marathon');
+    if (gameState.knowledge >= 1000) achievements.push('genius');
+    if (gameState.discoveries >= 50) achievements.push('experimenter');
+    if (gameState.timeInLab >= 3600) achievements.push('dedication');
+    return achievements;
+  };
+
+  const currentAchievements = calculateAchievements();
+
   return (
     <div className="min-h-screen bg-lab-dark quantum-bg">
       {/* Header */}
@@ -225,6 +250,12 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
               <Badge variant="outline" className="text-quantum-blue border-quantum-blue">
                 {playerName} - Уровень {gameState.level}
               </Badge>
+
+              {/* Achievements Display */}
+              <div className="flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-quantum-yellow" />
+                <span className="text-sm">{currentAchievements.length}</span>
+              </div>
 
               <Button
                 onClick={clearProgress}
@@ -251,36 +282,36 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <span>Энергия</span>
-                    <span className="text-quantum-blue">{gameState.energy}/{gameState.maxEnergy}</span>
+                    <span className="text-quantum-blue">{Math.round(gameState.energy || 0)}/{gameState.maxEnergy || 100}</span>
                   </div>
-                  <Progress value={(gameState.energy / gameState.maxEnergy) * 100} />
+                  <Progress value={((gameState.energy || 0) / (gameState.maxEnergy || 100)) * 100} />
                 </div>
 
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <span>Знания</span>
-                    <span className="text-quantum-purple">{gameState.knowledge}</span>
+                    <span className="text-quantum-purple">{gameState.knowledge || 0}</span>
                   </div>
-                  <Progress value={(gameState.knowledge % 100)} />
+                  <Progress value={(gameState.knowledge || 0) % 100} />
                   <span className="text-xs text-muted-foreground">
-                    До {gameState.level + 1} уровня: {100 - (gameState.knowledge % 100)}
+                    До {(gameState.level || 1) + 1} уровня: {100 - ((gameState.knowledge || 0) % 100)}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-quantum-yellow" />
-                    <span>{gameState.discoveries}</span>
+                    <span>{gameState.discoveries || 0}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Award className="w-4 h-4 text-quantum-orange" />
-                    <span>{gameState.achievements.length}</span>
+                    <span>{currentAchievements.length}</span>
                   </div>
                 </div>
 
                 <div className="text-xs text-muted-foreground">
-                  <p>Время в лаборатории: {Math.floor(gameState.timeInLab / 60)}м {gameState.timeInLab % 60}с</p>
-                  <p>Завершено уровней: {gameState.completedLevels.length}</p>
+                  <p>Время в лаборатории: {Math.floor((gameState.timeInLab || 0) / 60)}м {(gameState.timeInLab || 0) % 60}с</p>
+                  <p>Завершено уровней: {(gameState.completedLevels || []).length}</p>
                 </div>
               </CardContent>
             </Card>
@@ -401,6 +432,14 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                     <Trophy className="w-4 h-4 mr-2" />
                     Достижения
                   </Button>
+                  <Button
+                    onClick={() => setActiveTab('physics-lab')}
+                    variant={activeTab === 'physics-lab' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                  >
+                    <Beaker className="w-4 h-4 mr-2" />
+                    Физическая лаборатория
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -477,8 +516,11 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
             )}
             {activeTab === 'achievements' && (
               <AchievementsPanel 
-                gameState={gameState}
+                gameState={{...gameState, achievements: currentAchievements}}
               />
+            )}
+            {activeTab === 'physics-lab' && (
+              <PhysicsLab />
             )}
           </div>
         </div>

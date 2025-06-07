@@ -39,9 +39,9 @@ const AchievementsPanel: React.FC<AchievementsPanelProps> = ({ gameState }) => {
     {
       id: 'energy_saver',
       name: 'Энергосберегающий',
-      description: 'Накопите 100 единиц энергии',
+      description: 'Накопите максимум энергии',
       icon: Zap,
-      unlocked: gameState.energy >= 100,
+      unlocked: gameState.energy >= gameState.maxEnergy,
       condition: 'Накопите максимум энергии',
       category: 'special',
       difficulty: 'easy',
