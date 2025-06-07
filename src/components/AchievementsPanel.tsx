@@ -236,7 +236,7 @@ const AchievementsPanel: React.FC<AchievementsPanelProps> = ({ gameState }) => {
                         </p>
                         
                         <div className="space-y-2">
-                          <Progress value={progressPercent} className="h-2" />
+                          <Progress value={progressPercent} />
                           <div className="flex justify-between text-xs">
                             <span>{achievement.progress} / {achievement.maxProgress}</span>
                             <span>{Math.round(progressPercent)}%</span>
