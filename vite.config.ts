@@ -7,7 +7,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   base: '/QUANTUM-laboratory/',
   build: {
-    outDir: 'docs',
+    outDir: 'dist',
     rollupOptions: {
       output: {
         manualChunks: undefined
