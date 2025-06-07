@@ -8,6 +8,11 @@ export default defineConfig(({ mode }) => ({
   base: '/QUANTUM-laboratory/',
   build: {
     outDir: 'docs',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
   },
   server: {
     host: "::",
