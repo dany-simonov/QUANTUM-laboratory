@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Play, Settings, BookOpen, Award, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
 
 interface MainMenuProps {
   onStartGame: () => void;
@@ -12,6 +12,8 @@ interface MainMenuProps {
 }
 
 const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onShowSettings, onShowLogin, playerName }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-lab-dark quantum-bg lab-grid flex items-center justify-center p-4">
       {/* Floating particles effect */}
@@ -86,12 +88,13 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onShowSettings, onShow
           </Button>
 
           <Button
+            onClick={() => navigate('/scientists')}
             variant="outline"
             size="lg"
             className="h-20 text-xl border-quantum-yellow text-quantum-yellow hover:bg-quantum-yellow/10"
           >
             <BookOpen className="w-8 h-8 mr-3" />
-            Справочник Ученых
+            Справочник Учёных
           </Button>
         </div>
 
