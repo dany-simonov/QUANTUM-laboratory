@@ -1,29 +1,107 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Volume2, VolumeX, Zap, Lightbulb, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 interface SettingsScreenProps {
   onBack: () => void;
 }
 
+interface Settings {
+  soundEnabled: boolean;
+  musicVolume: number;
+  effectsVolume: number;
+  particleEffects: boolean;
+  animationSpeed: string;
+  difficulty: string;
+}
+
 const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [musicVolume, setMusicVolume] = useState([70]);
-  const [effectsVolume, setEffectsVolume] = useState([80]);
-  const [particleEffects, setParticleEffects] = useState(true);
-  const [animationSpeed, setAnimationSpeed] = useState('normal');
-  const [difficulty, setDifficulty] = useState('medium');
+  const { toast } = useToast();
+  const [settings, setSettings] = useState<Settings>(() => {
+    const saved = localStorage.getItem('quantumLabSettings');
+    return saved ? JSON.parse(saved) : {
+      soundEnabled: true,
+      musicVolume: 70,
+      effectsVolume: 80,
+      particleEffects: true,
+      animationSpeed: 'normal',
+      difficulty: 'medium'
+    };
+  });
+
+  // Sound effects and music setup
+  useEffect(() => {
+    // Background ambient music
+    if (settings.soundEnabled) {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Very subtle ambient tone
+      oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(settings.musicVolume / 1000, audioContext.currentTime); // Very quiet
+      
+      oscillator.start();
+      
+      return () => {
+        oscillator.stop();
+        audioContext.close();
+      };
+    }
+  }, [settings.soundEnabled, settings.musicVolume]);
+
+  const playClickSound = () => {
+    if (!settings.soundEnabled) return;
+    
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(settings.effectsVolume / 1000, audioContext.currentTime);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.1);
+    
+    setTimeout(() => audioContext.close(), 200);
+  };
+
+  const saveSettings = () => {
+    localStorage.setItem('quantumLabSettings', JSON.stringify(settings));
+    playClickSound();
+    toast({
+      title: "Настройки сохранены! ✨",
+      description: "Все изменения применены успешно.",
+    });
+  };
+
+  const updateSetting = (key: keyof Settings, value: any) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+    playClickSound();
+  };
 
   return (
     <div className="min-h-screen bg-lab-dark quantum-bg p-4">
       <div className="max-w-2xl mx-auto">
         <Button
-          onClick={onBack}
+          onClick={() => {
+            playClickSound();
+            onBack();
+          }}
           variant="ghost"
           className="mb-6 text-quantum-blue hover:text-quantum-blue/80"
         >
@@ -51,38 +129,38 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Звуковые эффекты</span>
                   <Switch
-                    checked={soundEnabled}
-                    onCheckedChange={setSoundEnabled}
+                    checked={settings.soundEnabled}
+                    onCheckedChange={(value) => updateSetting('soundEnabled', value)}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Громкость музыки</span>
-                    <span className="text-sm text-quantum-blue">{musicVolume[0]}%</span>
+                    <span className="text-sm text-quantum-blue">{settings.musicVolume}%</span>
                   </div>
                   <Slider
-                    value={musicVolume}
-                    onValueChange={setMusicVolume}
+                    value={[settings.musicVolume]}
+                    onValueChange={([value]) => updateSetting('musicVolume', value)}
                     max={100}
                     step={1}
                     className="w-full"
-                    disabled={!soundEnabled}
+                    disabled={!settings.soundEnabled}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Громкость эффектов</span>
-                    <span className="text-sm text-quantum-blue">{effectsVolume[0]}%</span>
+                    <span className="text-sm text-quantum-blue">{settings.effectsVolume}%</span>
                   </div>
                   <Slider
-                    value={effectsVolume}
-                    onValueChange={setEffectsVolume}
+                    value={[settings.effectsVolume]}
+                    onValueChange={([value]) => updateSetting('effectsVolume', value)}
                     max={100}
                     step={1}
                     className="w-full"
-                    disabled={!soundEnabled}
+                    disabled={!settings.soundEnabled}
                   />
                 </div>
               </div>
@@ -99,14 +177,14 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Эффекты частиц</span>
                   <Switch
-                    checked={particleEffects}
-                    onCheckedChange={setParticleEffects}
+                    checked={settings.particleEffects}
+                    onCheckedChange={(value) => updateSetting('particleEffects', value)}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <span className="text-sm">Скорость анимации</span>
-                  <Select value={animationSpeed} onValueChange={setAnimationSpeed}>
+                  <Select value={settings.animationSpeed} onValueChange={(value) => updateSetting('animationSpeed', value)}>
                     <SelectTrigger className="bg-lab-surface border-lab-border">
                       <SelectValue />
                     </SelectTrigger>
@@ -130,7 +208,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
               <div className="space-y-4 pl-7">
                 <div className="space-y-2">
                   <span className="text-sm">Уровень сложности</span>
-                  <Select value={difficulty} onValueChange={setDifficulty}>
+                  <Select value={settings.difficulty} onValueChange={(value) => updateSetting('difficulty', value)}>
                     <SelectTrigger className="bg-lab-surface border-lab-border">
                       <SelectValue />
                     </SelectTrigger>
@@ -147,18 +225,8 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             {/* Save Button */}
             <div className="pt-6 border-t border-lab-border">
               <Button
+                onClick={saveSettings}
                 className="w-full bg-quantum-green hover:bg-quantum-green/80 text-black font-semibold"
-                onClick={() => {
-                  // Here you would save settings to localStorage
-                  console.log('Settings saved:', {
-                    soundEnabled,
-                    musicVolume: musicVolume[0],
-                    effectsVolume: effectsVolume[0],
-                    particleEffects,
-                    animationSpeed,
-                    difficulty
-                  });
-                }}
               >
                 Сохранить настройки
               </Button>

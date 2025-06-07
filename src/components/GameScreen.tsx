@@ -80,14 +80,14 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-generate energy (faster)
+  // Auto-generate energy - increased to 5 per second
   useEffect(() => {
     const energyTimer = setInterval(() => {
       setGameState(prev => ({
         ...prev,
-        energy: Math.min(prev.maxEnergy, prev.energy + 2)
+        energy: Math.min(prev.maxEnergy, prev.energy + 5)
       }));
-    }, 3000);
+    }, 1000);
 
     return () => clearInterval(energyTimer);
   }, []);
@@ -141,7 +141,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
           12: ['korolev', 'lobachevsky'],
           13: ['tsiolkovsky', 'cherenkov'],
           14: ['friedman', 'basov'],
-          15: ['mechnikov', 'popov']
+          15: ['mechnikov', 'popov', 'novoselov', 'geim', 'perelman', 'oganov', 'oganessian']
         };
 
         const newUnlocks = scientistUnlocks[newLevel as keyof typeof scientistUnlocks] || [];
@@ -282,26 +282,26 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <span>Энергия</span>
-                    <span className="text-quantum-blue">{Math.round(gameState.energy || 0)}/{gameState.maxEnergy || 100}</span>
+                    <span className="text-quantum-blue">{Math.round(gameState.energy)}/{gameState.maxEnergy}</span>
                   </div>
-                  <Progress value={((gameState.energy || 0) / (gameState.maxEnergy || 100)) * 100} />
+                  <Progress value={(gameState.energy / gameState.maxEnergy) * 100} />
                 </div>
 
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <span>Знания</span>
-                    <span className="text-quantum-purple">{gameState.knowledge || 0}</span>
+                    <span className="text-quantum-purple">{gameState.knowledge}</span>
                   </div>
-                  <Progress value={(gameState.knowledge || 0) % 100} />
+                  <Progress value={gameState.knowledge % 100} />
                   <span className="text-xs text-muted-foreground">
-                    До {(gameState.level || 1) + 1} уровня: {100 - ((gameState.knowledge || 0) % 100)}
+                    До {gameState.level + 1} уровня: {100 - (gameState.knowledge % 100)}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-quantum-yellow" />
-                    <span>{gameState.discoveries || 0}</span>
+                    <span>{gameState.discoveries}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Award className="w-4 h-4 text-quantum-orange" />
@@ -310,8 +310,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                 </div>
 
                 <div className="text-xs text-muted-foreground">
-                  <p>Время в лаборатории: {Math.floor((gameState.timeInLab || 0) / 60)}м {(gameState.timeInLab || 0) % 60}с</p>
-                  <p>Завершено уровней: {(gameState.completedLevels || []).length}</p>
+                  <p>Время в лаборатории: {Math.floor(gameState.timeInLab / 60)}м {gameState.timeInLab % 60}с</p>
+                  <p>Завершено уровней: {gameState.completedLevels.length}</p>
                 </div>
               </CardContent>
             </Card>

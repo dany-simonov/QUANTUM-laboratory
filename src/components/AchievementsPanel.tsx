@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Trophy, Star, Award, Target, Zap, Clock, BookOpen, Medal } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

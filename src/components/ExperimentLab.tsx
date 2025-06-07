@@ -108,6 +108,102 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
         "Это основа квантовых компьютеров и криптографии",
         "Эксперименты Белла подтвердили реальность запутанности"
       ]
+    },
+    {
+      id: 5,
+      name: "Электромагнитные поля",
+      description: "Изучите взаимодействие электричества и магнетизма",
+      objective: "Проведите 2 эксперимента с электромагнетизмом",
+      hint: "Электричество и магнетизм - две стороны одного явления",
+      requiredExperiments: ['electromagnetic_induction', 'electromagnetic_induction'],
+      reward: 200,
+      unlocked: false,
+      completed: false,
+      facts: [
+        "Максвелл объединил электричество и магнетизм в единую теорию",
+        "Свет - это электромагнитная волна",
+        "Электромагнитная индукция лежит в основе генераторов"
+      ]
+    },
+    {
+      id: 6,
+      name: "Лазерные технологии",
+      description: "Исследуйте когерентное излучение",
+      objective: "Создайте лазерное излучение",
+      hint: "Атомы можно заставить излучать свет в унисон",
+      requiredExperiments: ['laser_emission'],
+      reward: 250,
+      unlocked: false,
+      completed: false,
+      facts: [
+        "Лазер означает усиление света вынужденным излучением",
+        "Первый лазер был создан в 1960 году",
+        "Лазеры используются в медицине, связи и производстве"
+      ]
+    },
+    {
+      id: 7,
+      name: "Сверхпроводимость",
+      description: "Откройте мир нулевого сопротивления",
+      objective: "Изучите сверхпроводящие материалы",
+      hint: "При низких температурах материалы могут терять сопротивление",
+      requiredExperiments: ['superconductivity'],
+      reward: 300,
+      unlocked: false,
+      completed: false,
+      facts: [
+        "Сверхпроводимость открыта в 1911 году",
+        "Сверхпроводники могут левитировать в магнитном поле",
+        "Используются в МРТ и ускорителях частиц"
+      ]
+    },
+    {
+      id: 8,
+      name: "Ядерные реакции",
+      description: "Изучите превращения атомных ядер",
+      objective: "Проведите управляемую ядерную реакцию",
+      hint: "В ядре атома скрыта огромная энергия",
+      requiredExperiments: ['nuclear_fission'],
+      reward: 350,
+      unlocked: false,
+      completed: false,
+      facts: [
+        "Ядерная энергия в миллионы раз мощнее химической",
+        "Первый ядерный реактор запущен в 1942 году",
+        "Ядерная энергия может быть мирной и военной"
+      ]
+    },
+    {
+      id: 9,
+      name: "Квантовые компьютеры",
+      description: "Исследуйте вычисления на квантовых эффектах",
+      objective: "Создайте простейший квантовый алгоритм",
+      hint: "Квантовые биты могут быть в суперпозиции состояний",
+      requiredExperiments: ['quantum_computing'],
+      reward: 400,
+      unlocked: false,
+      completed: false,
+      facts: [
+        "Квантовые компьютеры используют суперпозицию и запутанность",
+        "Могут решать некоторые задачи экспоненциально быстрее",
+        "Первые коммерческие квантовые компьютеры уже существуют"
+      ]
+    },
+    {
+      id: 10,
+      name: "Теория струн",
+      description: "Изучите фундаментальную природу реальности",
+      objective: "Исследуйте многомерные пространства",
+      hint: "Возможно, все частицы - это вибрирующие струны",
+      requiredExperiments: ['string_theory'],
+      reward: 500,
+      unlocked: false,
+      completed: false,
+      facts: [
+        "Теория струн предполагает 11 измерений пространства-времени",
+        "Пытается объединить все фундаментальные взаимодействия",
+        "Пока не имеет экспериментального подтверждения"
+      ]
     }
   ];
 
@@ -155,13 +251,92 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
       color: 'quantum-green',
       knowledgeReward: '30-50',
       duration: 7
+    },
+    {
+      id: 'electromagnetic_induction',
+      name: 'Электромагнитная индукция',
+      description: 'Изучите генерацию электричества магнитными полями.',
+      energyCost: 55,
+      requiredLevel: 5,
+      icon: Zap,
+      color: 'quantum-orange',
+      knowledgeReward: '40-60',
+      duration: 6
+    },
+    {
+      id: 'laser_emission',
+      name: 'Лазерное излучение',
+      description: 'Создайте когерентный пучок света.',
+      energyCost: 65,
+      requiredLevel: 6,
+      icon: Lightbulb,
+      color: 'quantum-red',
+      knowledgeReward: '50-70',
+      duration: 8
+    },
+    {
+      id: 'superconductivity',
+      name: 'Сверхпроводимость',
+      description: 'Исследуйте материалы с нулевым сопротивлением.',
+      energyCost: 75,
+      requiredLevel: 7,
+      icon: Zap,
+      color: 'quantum-cyan',
+      knowledgeReward: '60-80',
+      duration: 9
+    },
+    {
+      id: 'nuclear_fission',
+      name: 'Ядерные реакции',
+      description: 'Изучите деление атомных ядер.',
+      energyCost: 85,
+      requiredLevel: 8,
+      icon: Atom,
+      color: 'quantum-pink',
+      knowledgeReward: '70-90',
+      duration: 10
+    },
+    {
+      id: 'quantum_computing',
+      name: 'Квантовые вычисления',
+      description: 'Создайте простейший квантовый алгоритм.',
+      energyCost: 95,
+      requiredLevel: 9,
+      icon: Zap,
+      color: 'quantum-violet',
+      knowledgeReward: '80-100',
+      duration: 11
+    },
+    {
+      id: 'string_theory',
+      name: 'Теория струн',
+      description: 'Исследуйте фундаментальную природу реальности.',
+      energyCost: 105,
+      requiredLevel: 10,
+      icon: Waves,
+      color: 'quantum-gold',
+      knowledgeReward: '90-110',
+      duration: 12
     }
   ];
+
+  // Update current level based on completed levels
+  useEffect(() => {
+    let nextLevel = 1;
+    for (let i = 1; i <= 10; i++) {
+      if ((gameState.completedLevels || []).includes(i)) {
+        nextLevel = i + 1;
+      } else {
+        break;
+      }
+    }
+    setCurrentLevel(Math.min(nextLevel, 10));
+  }, [gameState.completedLevels]);
 
   // Check if current level is complete and update
   useEffect(() => {
     const currentLevelData = levels.find(level => level.id === currentLevel);
-    if (currentLevelData && !gameState.completedLevels.includes(currentLevel)) {
+    if (currentLevelData && !(gameState.completedLevels || []).includes(currentLevel)) {
       const requiredCount = currentLevelData.requiredExperiments.length;
       const completedCount = (gameState.completedExperiments || []).filter(exp => 
         currentLevelData.requiredExperiments.includes(exp)
@@ -173,7 +348,6 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
           reward: currentLevelData.reward,
           name: currentLevelData.name
         });
-        setCurrentLevel(prev => prev + 1);
         
         toast({
           title: `🎉 Уровень ${currentLevel} завершен!`,
@@ -181,7 +355,7 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
         });
       }
     }
-  }, [gameState.completedExperiments, currentLevel, onCompleteLevel, toast]);
+  }, [gameState.completedExperiments, currentLevel, onCompleteLevel, toast, gameState.completedLevels]);
 
   const getCurrentLevel = () => {
     return levels.find(level => level.id === currentLevel);
@@ -225,7 +399,7 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
   };
 
   const currentLevelData = getCurrentLevel();
-  const isLevelCompleted = gameState.completedLevels?.includes(currentLevel);
+  const isLevelCompleted = (gameState.completedLevels || []).includes(currentLevel);
 
   return (
     <div className="space-y-6">
@@ -245,7 +419,7 @@ const ExperimentLab: React.FC<ExperimentLabProps> = ({ gameState, onConductExper
       {currentLevelData && (
         <Card className={`${isLevelCompleted ? 'border-quantum-green bg-gradient-to-r from-lab-surface to-quantum-green/10' : 'border-quantum-yellow bg-gradient-to-r from-lab-surface to-quantum-yellow/10'}`}>
           <CardHeader>
-            <CardTitle className={`text-lg ${isLevelCompleted ? 'text-quantum-green' : 'text-quantum-yellow'} flex items-center gap-2`}>
+            <CardTitle className={`text-lg ${isLevelCompleted ? 'text-quantum-green' : 'text-white'} flex items-center gap-2`}>
               {isLevelCompleted ? <CheckCircle className="w-5 h-5" /> : <Trophy className="w-5 h-5" />}
               Уровень {currentLevel}: {currentLevelData.name}
               {isLevelCompleted && <Badge className="bg-quantum-green/20 text-quantum-green ml-2">Завершен!</Badge>}
