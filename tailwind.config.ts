@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -52,15 +53,19 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+				// Научная тема - неоновые цвета для частиц
+				quantum: {
+					blue: '#00D4FF',
+					purple: '#9D4EDD',
+					green: '#00F5A0',
+					orange: '#FF6B35',
+					pink: '#FF006E',
+					yellow: '#FFD60A'
+				},
+				lab: {
+					dark: '#0A0A0F',
+					surface: '#1A1A2E',
+					border: '#2D2D44'
 				}
 			},
 			borderRadius: {
@@ -84,11 +89,27 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'particle-float': {
+					'0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+					'50%': { transform: 'translateY(-20px) rotate(180deg)' }
+				},
+				'glow': {
+					'0%, 100%': { boxShadow: '0 0 5px currentColor' },
+					'50%': { boxShadow: '0 0 20px currentColor, 0 0 30px currentColor' }
+				},
+				'energy-pulse': {
+					'0%': { transform: 'scale(1)', opacity: '1' },
+					'50%': { transform: 'scale(1.1)', opacity: '0.8' },
+					'100%': { transform: 'scale(1)', opacity: '1' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'particle-float': 'particle-float 3s ease-in-out infinite',
+				'glow': 'glow 2s ease-in-out infinite',
+				'energy-pulse': 'energy-pulse 2s ease-in-out infinite'
 			}
 		}
 	},
