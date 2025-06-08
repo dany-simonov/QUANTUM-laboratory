@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Atom, Zap, Book, Award, Target, Clock, Star, Eye, Waves, Trophy, CircuitBoard, Timer, Thermometer, Volume2, Magnet, TrendingUp, Beaker } from 'lucide-react';
+import { ArrowLeft, Atom, Zap, Book, Award, Target, Clock, Star, Eye, Waves, Trophy, CircuitBoard, Timer, Thermometer, Volume2, Magnet, TrendingUp, Beaker, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -19,6 +18,7 @@ import MotionSimulator from './MotionSimulator';
 import ScientistProfile from './ScientistProfile';
 import AchievementsPanel from './AchievementsPanel';
 import PhysicsLab from './PhysicsLab';
+import QuizSystem from './QuizSystem';
 
 interface GameScreenProps {
   onBack: () => void;
@@ -59,7 +59,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
     };
   });
 
-  const [activeTab, setActiveTab] = useState<'lab' | 'particles' | 'optics' | 'waves' | 'circuits' | 'oscillations' | 'thermal' | 'sound' | 'magnetic' | 'motion' | 'scientists' | 'achievements' | 'physics-lab'>('lab');
+  const [activeTab, setActiveTab] = useState<'lab' | 'particles' | 'optics' | 'waves' | 'circuits' | 'oscillations' | 'thermal' | 'sound' | 'magnetic' | 'motion' | 'scientists' | 'achievements' | 'physics-lab' | 'quizzes'>('lab');
   const [gameTime, setGameTime] = useState(0);
 
   // Сохраняем состояние игры
@@ -189,6 +189,31 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
     toast({
       title: "Симуляция завершена! 🔬",
       description: `Получено знаний: ${knowledge}`,
+    });
+  };
+
+  const handleQuizKnowledge = (amount: number) => {
+    setGameState(prev => {
+      const newKnowledge = prev.knowledge + amount;
+      const newLevel = Math.floor(newKnowledge / 100) + 1;
+      const newMaxEnergy = 100 + ((newLevel - 1) * 25);
+      
+      const newState = {
+        ...prev,
+        knowledge: newKnowledge,
+        level: newLevel,
+        maxEnergy: newMaxEnergy
+      };
+
+      // Проверяем повышение уровня
+      if (newLevel > prev.level) {
+        toast({
+          title: "Повышение уровня! 🎉",
+          description: `Поздравляем! Вы достигли ${newLevel} уровня исследователя!`,
+        });
+      }
+
+      return newState;
     });
   };
 
@@ -329,6 +354,14 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                     Лаборатория
                   </Button>
                   <Button
+                    onClick={() => setActiveTab('quizzes')}
+                    variant={activeTab === 'quizzes' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                  >
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Квизы
+                  </Button>
+                  <Button
                     onClick={() => setActiveTab('particles')}
                     variant={activeTab === 'particles' ? 'default' : 'ghost'}
                     className="w-full justify-start"
@@ -452,6 +485,12 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBack, playerName }) => {
                 gameState={gameState}
                 onConductExperiment={conductExperiment}
                 onCompleteLevel={completeLevel}
+              />
+            )}
+            {activeTab === 'quizzes' && (
+              <QuizSystem 
+                playerName={playerName}
+                onEarnKnowledge={handleQuizKnowledge}
               />
             )}
             {activeTab === 'particles' && (
